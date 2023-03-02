@@ -17,6 +17,9 @@ list(APPEND FILE_MANAGER_FLAGS
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 
+# Make extensions
+add_library(vim_ext SHARED vim_ext/vim_ext.c)
+
 # Create main executable
 add_executable(file_manager 
     src/main.c 
@@ -25,8 +28,12 @@ add_executable(file_manager
     src/global_buf.c 
     src/structs.c 
     src/utils.c
+    src/extensions.c
+    src/init.c
+    src/constants.c
 )
 target_link_libraries(file_manager ${CURSES_LIBRARIES})
+target_link_libraries(file_manager dl)
 target_compile_options(file_manager PRIVATE ${FILE_MANAGER_FLAGS})
 message(STATUS "File manager flags are: ${FILE_MANAGER_FLAGS}")
 

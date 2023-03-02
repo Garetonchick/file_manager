@@ -9,5 +9,6 @@
 
 void ConcatPaths(const char* path, const char* local_path, char* out);
 const char* GetFileName(const char* path);
+const char* GetFileExtension(const char* path);
 
 void mvprintfw(int row, int col, const char* format, ...); // NOLINT

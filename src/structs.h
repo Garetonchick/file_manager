@@ -31,3 +31,4 @@ int DirItemCmp(const void *item1, const void *item2);
 DirItemsList GetDirItemsList(const char *path, bool include_hidden);
 void DestroyDirItemList(DirItemsList list);
 void UpdateDirItemsList(DirItemsList *items_list, const char* new_path, bool include_hidden);
+void ReloadCurrentDir(FileManagerState* st);

@@ -2,6 +2,10 @@
 #include "actions.h"
 #include "display.h"
 #include "constants.h"
+#include "extensions.h"
+#include "structs.h"
+#include "utils.h"
+#include "init.h"
 
 #include <assert.h>
 #include <curses.h>
@@ -9,7 +13,7 @@
 #include <linux/limits.h>
 #include <ncurses.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdio.h> 
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -17,21 +21,6 @@
 #include <unistd.h>
 #include <ctype.h>
 
-void InitNcurses() {
-    initscr();
-    curs_set(0);
-    keypad(stdscr, true);
-    nodelay(stdscr, true);
-
-    use_default_colors();
-    start_color();
-
-    init_pair(DIR_COLOR_PAIR, COLOR_CYAN, -1);
-    init_pair(SYMLINK_COLOR_PAIR, COLOR_MAGENTA, -1);
-    init_pair(FIFO_COLOR_PAIR, COLOR_WHITE, COLOR_BLUE);
-
-    refresh();
-}
 
 void UpdateState(FileManagerState* st, int key) {
     switch (key) {
@@ -44,7 +33,7 @@ void UpdateState(FileManagerState* st, int key) {
             break;
 
         case '\n': 
-            EnterDirAction(st);
+            EnterPressedAction(st);
             break;
         
         case 'D':
@@ -72,11 +61,30 @@ void UpdateState(FileManagerState* st, int key) {
     }
 }
 
-int main(void) {
+int main(int args, char* argv[]) {
+    if(!args) {
+        return 1;
+    }
+
     InitNcurses();
 
     FileManagerState st;
     InitFileManagerState(&st);
+
+    char path_to_program_buf[PATH_MAX + 1];
+    ConcatPaths(st.current_path, argv[0], path_to_program_buf);
+    strcpy(g_path_to_program, path_to_program_buf);
+    strcpy(g_argv0, argv[0]);
+    int last_slash_idx = GetFileName(path_to_program_buf) - path_to_program_buf - 1;
+    path_to_program_buf[last_slash_idx] = '\0';
+
+    InitLibList(path_to_program_buf);
+
+    if(args >= 2) {
+        strcpy(st.current_path, argv[1]);
+        st.current_path_len = strlen(st.current_path);
+        ReloadCurrentDir(&st);
+    }
 
     int key = 0;
 
@@ -88,5 +96,7 @@ int main(void) {
     } while ((key = getch()) != 'q');
 
     endwin();
+    DestroyLibList();
+
     return 0;
 }

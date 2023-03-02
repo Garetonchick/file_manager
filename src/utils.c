@@ -24,6 +24,23 @@ const char* GetFileName(const char* path) {
     return last_slash + 1;
 }
 
+const char* GetFileExtension(const char* path) {
+    int path_len = strlen(path);
+    path += path_len; 
+    const char* last_dot = path;
+
+    while(path_len--) {
+        --path;
+
+        if(*path == '.') {
+            last_dot = path;
+            break;
+        }
+    }
+
+    return last_dot;
+}
+
 void mvprintfw(int row, int col, const char* format, ...) { // NOLINT
     va_list args;
     va_start(args, format);

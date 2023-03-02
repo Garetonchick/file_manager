@@ -124,3 +124,15 @@ get_dir_items_end:
 
     return list;
 }
+
+void ReloadCurrentDir(FileManagerState* st) {
+    UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
+
+    if(st->selected_idx >= st->items.size) {
+        st->selected_idx = st->items.size - 1;
+    }
+
+    if(st->first_item_idx > st->selected_idx) {
+        st->first_item_idx = st->selected_idx;
+    }
+}

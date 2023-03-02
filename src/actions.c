@@ -1,6 +1,7 @@
 #include "actions.h"
 
 #include "constants.h"
+#include "extensions.h"
 #include "structs.h"
 #include "utils.h"
 #include "global_buf.h"
@@ -11,21 +12,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-// Helpers
-
-void ReloadCurrentDir(FileManagerState* st) {
-    UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
-
-    if(st->selected_idx >= st->items.size) {
-        st->selected_idx = st->items.size - 1;
-    }
-
-    if(st->first_item_idx > st->selected_idx) {
-        st->first_item_idx = st->selected_idx;
-    }
-}
-
-// Actions
 
 void SelectFileBelowAction(FileManagerState* st) {
     if (st->selected_idx + 1 != st->items.size) {
@@ -48,28 +34,37 @@ void SelectFileAboveAction(FileManagerState* st) {
 }
 
 void EnterDirAction(FileManagerState* st) {
-    if (st->items.items[st->selected_idx].type == FILE_TYPE_DIR) {
-        if (strcmp(st->items.items[st->selected_idx].name, "..") == 0) {
-            while (st->current_path[--st->current_path_len] != '/') {
-            }
-
-            if (st->current_path_len != 0) {
-                st->current_path[st->current_path_len] = '\0';
-            } else {
-                st->current_path_len = 1;
-                st->current_path[st->current_path_len] = '\0';
-            }
-        } else {
-            const char *format =
-                st->current_path[st->current_path_len - 1] == '/' ? "%s" : "/%s";
-            snprintf(st->current_path + st->current_path_len, PATH_MAX, format,
-                        st->items.items[st->selected_idx].name);
+    if (strcmp(st->items.items[st->selected_idx].name, "..") == 0) {
+        while (st->current_path[--st->current_path_len] != '/') {
         }
 
-        UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
-        st->current_path_len = strlen(st->current_path);
-        st->selected_idx = 0;
-        st->first_item_idx = 0;
+        if (st->current_path_len != 0) {
+            st->current_path[st->current_path_len] = '\0';
+        } else {
+            st->current_path_len = 1;
+            st->current_path[st->current_path_len] = '\0';
+        }
+    } else {
+        const char *format =
+            st->current_path[st->current_path_len - 1] == '/' ? "%s" : "/%s";
+        snprintf(st->current_path + st->current_path_len, PATH_MAX, format,
+                    st->items.items[st->selected_idx].name);
+    }
+
+    UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
+    st->current_path_len = strlen(st->current_path);
+    st->selected_idx = 0;
+    st->first_item_idx = 0;
+}
+
+void EnterPressedAction(FileManagerState* st) {
+    if (st->items.items[st->selected_idx].type == FILE_TYPE_DIR) {
+        EnterDirAction(st);
+    } else {
+        char* buf = calloc(strlen(st->current_path) + strlen(st->items.items[st->selected_idx].name) + 1, 1);
+        ConcatPaths(st->current_path, st->items.items[st->selected_idx].name, buf);
+        OpenFile(buf, st->current_path);
+        free(buf);
     }
 }
 
