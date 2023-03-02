@@ -3,6 +3,7 @@
 #include "structs.h"
 #include "constants.h"
 #include "global_buf.h"
+#include "utils.h"
 
 #include <ncurses.h>
 #include <string.h>
@@ -10,7 +11,11 @@
 void DisplayState(const FileManagerState* st) {
     int arrow_row = SUBWINDOW_ROW_OFFSET + st->selected_idx - st->first_item_idx;
 
-    mvprintw(26, 1, st->current_path);
+    // Useful debug info
+    mvprintfw(26, 1, "Cur path: %s", st->current_path);
+    mvprintfw(27, 1, "Cut path: %s", st->cut_path);
+
+    // Actual displays
     DisplayDirectoryContents(st->items, SUBWINDOW_ROWS, st->first_item_idx);
     DisplayArrow(arrow_row);
     DisplayHeader();

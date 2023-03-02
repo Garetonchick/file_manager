@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include <ctype.h>
 
-
 void InitNcurses() {
     initscr();
     curs_set(0);
@@ -48,6 +47,14 @@ void UpdateState(FileManagerState* st, int key) {
         
         case 'D':
             DeleteDirMemberAction(st);
+            break;
+
+        case 'X':
+            CutCopyFile(st);
+            break;
+
+        case 'V':
+            CutPasteFile(st);
             break;
 
         default:
