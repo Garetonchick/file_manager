@@ -18,7 +18,14 @@ find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIR})
 
 # Create main executable
-add_executable(file_manager main.c)
+add_executable(file_manager 
+    src/main.c 
+    src/actions.c 
+    src/display.c 
+    src/global_buf.c 
+    src/structs.c 
+    src/utils.c
+)
 target_link_libraries(file_manager ${CURSES_LIBRARIES})
 target_compile_options(file_manager PRIVATE ${FILE_MANAGER_FLAGS})
 message(STATUS "File manager flags are: ${FILE_MANAGER_FLAGS}")
