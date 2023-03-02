@@ -30,15 +30,22 @@ void DisplayDirectoryContents(DirItemsList content, int rows, int first_item_idx
 
     for (int i = 0; i < lines_to_print; ++i) {
         DirItem *item = &content.items[first_item_idx + i];
+        int color_pair = -1;
 
-        if (item->is_dir) {
-            attron(COLOR_PAIR(DIR_COLOR_PAIR));
-            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET,
-                     item->name);
-            attroff(COLOR_PAIR(DIR_COLOR_PAIR));
+        if (item->type == FILE_TYPE_DIR) {
+            color_pair = DIR_COLOR_PAIR;
+        } else if(item->type == FILE_TYPE_SYMBOLIC_LINK) {
+            color_pair = SYMLINK_COLOR_PAIR;
+        } else if(item->type == FILE_TYPE_FIFO) {
+            color_pair = FIFO_COLOR_PAIR;
+        }
+
+        if(color_pair != -1) {
+            attron(COLOR_PAIR(color_pair));
+            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET, item->name);
+            attroff(COLOR_PAIR(color_pair));
         } else {
-            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET,
-                     item->name);
+            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET, item->name);
         }
 
         if(i) {

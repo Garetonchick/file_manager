@@ -1,4 +1,5 @@
 #include "structs.h"
+#include "constants.h"
 
 #include <string.h>
 #include <dirent.h>
@@ -90,8 +91,21 @@ DirItemsList GetDirItemsList(const char *path) {
         }
 
         list.items[new_item_idx].name = name;
-        list.items[new_item_idx].is_dir = S_ISDIR(stat_buf.st_mode);
         list.items[new_item_idx].size = stat_buf.st_size; 
+
+        int ftype = FILE_TYPE_OTHER;
+
+        if(S_ISREG(stat_buf.st_mode)) {
+            ftype =  FILE_TYPE_REGULAR; 
+        } else if(S_ISDIR(stat_buf.st_mode)) {
+            ftype = FILE_TYPE_DIR; 
+        } else if(S_ISLNK(stat_buf.st_mode)) {
+            ftype = FILE_TYPE_SYMBOLIC_LINK; 
+        } else if(S_ISFIFO(stat_buf.st_mode)) {
+            ftype = FILE_TYPE_FIFO;
+        } 
+
+        list.items[new_item_idx].type = ftype;
     }
 
     goto get_dir_items_end;

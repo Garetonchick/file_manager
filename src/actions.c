@@ -44,7 +44,7 @@ void SelectFileAboveAction(FileManagerState* st) {
 }
 
 void EnterDirAction(FileManagerState* st) {
-    if (st->items.items[st->selected_idx].is_dir) {
+    if (st->items.items[st->selected_idx].type == FILE_TYPE_DIR) {
         if (strcmp(st->items.items[st->selected_idx].name, "..") == 0) {
             while (st->current_path[--st->current_path_len] != '/') {
             }
@@ -83,7 +83,8 @@ void CutCopyFile(FileManagerState* st) {
 }
 
 void CopyFile(FileManagerState* st) {
-    if(!st->items.items[st->selected_idx].is_dir) {
+    int ftype = st->items.items[st->selected_idx].type;
+    if(ftype == FILE_TYPE_REGULAR || ftype == FILE_TYPE_SYMBOLIC_LINK || ftype == FILE_TYPE_FIFO) {
         ConcatPaths(st->current_path, st->items.items[st->selected_idx].name, st->copy_path);
         st->cut_file = false;
     }

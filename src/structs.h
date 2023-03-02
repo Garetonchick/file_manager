@@ -5,8 +5,8 @@
 
 typedef struct DirItem {
     char *name;
-    bool is_dir;
     size_t size;
+    int type;
 } DirItem;
 
 typedef struct DirItemsList {

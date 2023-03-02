@@ -27,6 +27,8 @@ void InitNcurses() {
     start_color();
 
     init_pair(DIR_COLOR_PAIR, COLOR_CYAN, -1);
+    init_pair(SYMLINK_COLOR_PAIR, COLOR_MAGENTA, -1);
+    init_pair(FIFO_COLOR_PAIR, COLOR_WHITE, COLOR_BLUE);
 
     refresh();
 }
