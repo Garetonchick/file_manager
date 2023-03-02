@@ -8,3 +8,4 @@ void DeleteDirMemberAction(FileManagerState* st);
 void CutCopyFile(FileManagerState* st);
 void CopyFile(FileManagerState* st);
 void PasteFile(FileManagerState* st);
+void SwitchShowingHidden(FileManagerState* st);

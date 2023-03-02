@@ -62,6 +62,10 @@ void UpdateState(FileManagerState* st, int key) {
         case 'V':
             PasteFile(st);
             break;
+        
+        case 'H':
+            SwitchShowingHidden(st);
+            break;
 
         default:
             break;

@@ -14,10 +14,14 @@
 // Helpers
 
 void ReloadCurrentDir(FileManagerState* st) {
-    UpdateDirItemsList(&st->items, st->current_path);
+    UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
 
     if(st->selected_idx >= st->items.size) {
-        --st->selected_idx;
+        st->selected_idx = st->items.size - 1;
+    }
+
+    if(st->first_item_idx > st->selected_idx) {
+        st->first_item_idx = st->selected_idx;
     }
 }
 
@@ -62,7 +66,7 @@ void EnterDirAction(FileManagerState* st) {
                         st->items.items[st->selected_idx].name);
         }
 
-        UpdateDirItemsList(&st->items, st->current_path);
+        UpdateDirItemsList(&st->items, st->current_path, st->show_hidden);
         st->current_path_len = strlen(st->current_path);
         st->selected_idx = 0;
         st->first_item_idx = 0;
@@ -154,4 +158,9 @@ void PasteFile(FileManagerState* st) {
 
         ReloadCurrentDir(st);
     }
+}
+
+void SwitchShowingHidden(FileManagerState* st) {
+    st->show_hidden = !st->show_hidden;
+    ReloadCurrentDir(st);
 }

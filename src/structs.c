@@ -13,8 +13,9 @@ void InitFileManagerState(FileManagerState* st) {
     st->current_path_len = strlen(st->current_path);
     st->copy_path[0] = '\0';
     st->cut_file = false;
+    st->show_hidden = false;
 
-    st->items = GetDirItemsList(st->current_path);
+    st->items = GetDirItemsList(st->current_path, false);
     qsort(st->items.items, st->items.size, sizeof(DirItem), DirItemCmp);
 
     st->selected_idx = 0;
@@ -33,13 +34,13 @@ void DestroyDirItemList(DirItemsList list) {
     free(list.items);
 }
 
-void UpdateDirItemsList(DirItemsList *items_list, const char* new_path) {
+void UpdateDirItemsList(DirItemsList *items_list, const char* new_path, bool include_hidden) {
     DestroyDirItemList(*items_list);
-    *items_list = GetDirItemsList(new_path);
+    *items_list = GetDirItemsList(new_path, include_hidden);
     qsort(items_list->items, items_list->size, sizeof(DirItem), DirItemCmp);
 }
 
-DirItemsList GetDirItemsList(const char *path) {
+DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
     DIR *dir = opendir(path);
 
     if (!dir) {
@@ -61,6 +62,10 @@ DirItemsList GetDirItemsList(const char *path) {
 
     while ((dir_member = readdir(dir))) {
         if (strcmp(dir_member->d_name, ".") == 0) {
+            continue;
+        }
+
+        if(!include_hidden && strcmp(dir_member->d_name, "..") != 0 && *dir_member->d_name == '.') {
             continue;
         }
 

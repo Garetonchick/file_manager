@@ -19,6 +19,7 @@ typedef struct FileManagerState {
     char current_path[PATH_MAX + 1];
     char copy_path[PATH_MAX + 1];
     bool cut_file;
+    bool show_hidden;
     int current_path_len;
     int selected_idx;
     int first_item_idx;
@@ -27,6 +28,6 @@ typedef struct FileManagerState {
 void InitFileManagerState(FileManagerState* st);
 
 int DirItemCmp(const void *item1, const void *item2);
-DirItemsList GetDirItemsList(const char *path);
+DirItemsList GetDirItemsList(const char *path, bool include_hidden);
 void DestroyDirItemList(DirItemsList list);
-void UpdateDirItemsList(DirItemsList *items_list, const char* new_path);
+void UpdateDirItemsList(DirItemsList *items_list, const char* new_path, bool include_hidden);
