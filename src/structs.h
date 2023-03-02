@@ -17,7 +17,8 @@ typedef struct DirItemsList {
 typedef struct FileManagerState {
     DirItemsList items;
     char current_path[PATH_MAX + 1];
-    char cut_path[PATH_MAX + 1];
+    char copy_path[PATH_MAX + 1];
+    bool cut_file;
     int current_path_len;
     int selected_idx;
     int first_item_idx;

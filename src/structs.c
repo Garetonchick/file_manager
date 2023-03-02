@@ -10,7 +10,8 @@
 void InitFileManagerState(FileManagerState* st) {
     getcwd(st->current_path, PATH_MAX);
     st->current_path_len = strlen(st->current_path);
-    st->cut_path[0] = '\0';
+    st->copy_path[0] = '\0';
+    st->cut_file = false;
 
     st->items = GetDirItemsList(st->current_path);
     qsort(st->items.items, st->items.size, sizeof(DirItem), DirItemCmp);

@@ -13,7 +13,7 @@ void DisplayState(const FileManagerState* st) {
 
     // Useful debug info
     mvprintfw(26, 1, "Cur path: %s", st->current_path);
-    mvprintfw(27, 1, "Cut path: %s", st->cut_path);
+    mvprintfw(27, 1, "Copy path: %s", st->copy_path);
 
     // Actual displays
     DisplayDirectoryContents(st->items, SUBWINDOW_ROWS, st->first_item_idx);

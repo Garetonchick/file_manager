@@ -49,12 +49,16 @@ void UpdateState(FileManagerState* st, int key) {
             DeleteDirMemberAction(st);
             break;
 
+        case 'C':
+            CopyFile(st);
+            break;
+
         case 'X':
             CutCopyFile(st);
             break;
 
         case 'V':
-            CutPasteFile(st);
+            PasteFile(st);
             break;
 
         default:

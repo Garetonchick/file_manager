@@ -2,6 +2,7 @@
 
 enum {
     GLOBAL_BUF_SIZE = 4444,
+    READ_BUF_SIZE = 4096,
     ROWS_NUM = 24,
     COLS_NUM = 80,
     SUBWINDOW_ROW_OFFSET = 1,

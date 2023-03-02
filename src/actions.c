@@ -7,6 +7,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 // Helpers
 
@@ -75,16 +78,79 @@ void DeleteDirMemberAction(FileManagerState* st) {
 } 
 
 void CutCopyFile(FileManagerState* st) {
+    CopyFile(st);
+    st->cut_file = true;
+}
+
+void CopyFile(FileManagerState* st) {
     if(!st->items.items[st->selected_idx].is_dir) {
-        ConcatPaths(st->current_path, st->items.items[st->selected_idx].name, st->cut_path);
+        ConcatPaths(st->current_path, st->items.items[st->selected_idx].name, st->copy_path);
+        st->cut_file = false;
     }
 }
 
-void CutPasteFile(FileManagerState* st) {
-    if(*st->cut_path) {
-        ConcatPaths(st->current_path, GetFileName(st->cut_path), g_buf);
-        rename(st->cut_path, g_buf);
-        st->cut_path[0] = '\0';
+void JustPasteFile(FileManagerState* st) {
+    ConcatPaths(st->current_path, GetFileName(st->copy_path), g_buf);
+
+    if(strcmp(st->copy_path, g_buf) == 0) {
+        return;
+    }
+
+    int in_fd = open(st->copy_path, O_RDONLY);
+    int out_fd = open(g_buf, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+    if(in_fd < 0) {
+        perror(st->copy_path);
+        exit(1);
+    }
+
+    if(out_fd < 0) {
+        perror(g_buf);
+        exit(1);
+    }
+
+    int bytes_read = 0;
+
+    while((bytes_read = read(in_fd, g_read_buf, READ_BUF_SIZE)) > 0) {
+        if(write(out_fd, g_read_buf, bytes_read) < bytes_read) {
+            perror("write");
+            exit(1);
+        }
+    }
+
+    if(bytes_read < 0) {
+        perror("read");
+        exit(1);
+    }
+
+    close(in_fd);
+    close(out_fd);
+
+    struct stat in_stat;
+
+    if (lstat(st->copy_path, &in_stat) == -1) {
+        exit(1);
+    }
+
+    chmod(g_buf, in_stat.st_mode);
+
+    st->copy_path[0] = '\0';
+}
+
+void PasteAndDeleteFile(FileManagerState* st) {
+    ConcatPaths(st->current_path, GetFileName(st->copy_path), g_buf);
+    rename(st->copy_path, g_buf);
+    st->copy_path[0] = '\0';
+}
+
+void PasteFile(FileManagerState* st) {
+    if(*st->copy_path) {
+        if(st->cut_file) {
+            PasteAndDeleteFile(st);
+        } else {
+            JustPasteFile(st);
+        }
+
         ReloadCurrentDir(st);
     }
 }

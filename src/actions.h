@@ -6,4 +6,5 @@ void SelectFileAboveAction(FileManagerState* st);
 void EnterDirAction(FileManagerState* st);
 void DeleteDirMemberAction(FileManagerState* st);
 void CutCopyFile(FileManagerState* st);
-void CutPasteFile(FileManagerState* st);
+void CopyFile(FileManagerState* st);
+void PasteFile(FileManagerState* st);
