@@ -1,12 +1,17 @@
 #include "structs.h"
 #include "constants.h"
 
+#include <curses.h>
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
+
+void FetchWindowInfo(FileManagerState* st) {
+    getmaxyx(stdscr, st->win_height, st->win_width);   
+}
 
 void InitFileManagerState(FileManagerState* st) {
     getcwd(st->current_path, PATH_MAX);
@@ -20,6 +25,8 @@ void InitFileManagerState(FileManagerState* st) {
 
     st->selected_idx = 0;
     st->first_item_idx = 0;
+
+    FetchWindowInfo(st);
 }
 
 int DirItemCmp(const void *item1, const void *item2) {

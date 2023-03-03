@@ -15,6 +15,8 @@ typedef struct DirItemsList {
 } DirItemsList;
 
 typedef struct FileManagerState {
+    int win_height;
+    int win_width;
     DirItemsList items;
     char current_path[PATH_MAX + 1];
     char copy_path[PATH_MAX + 1];
@@ -26,6 +28,7 @@ typedef struct FileManagerState {
 } FileManagerState;
 
 void InitFileManagerState(FileManagerState* st);
+void FetchWindowInfo(FileManagerState* st);
 
 int DirItemCmp(const void *item1, const void *item2);
 DirItemsList GetDirItemsList(const char *path, bool include_hidden);

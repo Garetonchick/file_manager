@@ -1,6 +1,7 @@
 #include "actions.h"
 
 #include "constants.h"
+#include "display.h"
 #include "extensions.h"
 #include "structs.h"
 #include "utils.h"
@@ -12,15 +13,29 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
+void NormalizeArrow(FileManagerState* st) {
+    if (st->selected_idx >= st->items.size) {
+        st->selected_idx = st->items.size - 1;
+    }
+
+    if(st->first_item_idx > st->selected_idx) {
+        st->first_item_idx = st->selected_idx;
+    }
+
+    while(!CanArrowBeDisplayed(st)) {
+        ++st->first_item_idx;
+    }
+}
 
 void SelectFileBelowAction(FileManagerState* st) {
     if (st->selected_idx + 1 != st->items.size) {
         ++st->selected_idx;
     }
 
-    if (st->selected_idx - st->first_item_idx >= SUBWINDOW_ROWS) {
-        ++st->first_item_idx;
-    }
+    // while(!CanArrowBeDisplayed(st)) {
+    //     ++st->first_item_idx;
+    // }
+    NormalizeArrow(st);
 }
 
 void SelectFileAboveAction(FileManagerState* st) {
@@ -28,9 +43,10 @@ void SelectFileAboveAction(FileManagerState* st) {
         --st->selected_idx;
     }
 
-    if (st->selected_idx < st->first_item_idx) {
-        --st->first_item_idx;
-    }
+    // if (st->selected_idx < st->first_item_idx) {
+    //     --st->first_item_idx;
+    // }
+    NormalizeArrow(st);
 }
 
 void EnterDirAction(FileManagerState* st) {

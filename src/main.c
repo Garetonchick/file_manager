@@ -89,6 +89,7 @@ int main(int args, char* argv[]) {
     int key = 0;
 
     do {
+        FetchWindowInfo(&st);
         UpdateState(&st, key);
         erase();
         DisplayState(&st);

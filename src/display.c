@@ -6,30 +6,54 @@
 #include "utils.h"
 
 #include <ncurses.h>
+#include <stdio.h>
 #include <string.h>
 
-void DisplayState(const FileManagerState* st) {
-    int arrow_row = SUBWINDOW_ROW_OFFSET + st->selected_idx - st->first_item_idx;
-
-    // Useful debug info
-    mvprintfw(26, 1, "Cur path: %s", st->current_path);
-    mvprintfw(27, 1, "Copy path: %s", st->copy_path);
-
-    // Actual displays
-    DisplayDirectoryContents(st->items, SUBWINDOW_ROWS, st->first_item_idx);
-    DisplayArrow(arrow_row);
-    DisplayHeader();
+void PrintSpaces(int num) {
+    for (int i = 0; i < num; ++i) {
+        printw(" ");
+    }
 }
 
-void DisplayDirectoryContents(DirItemsList content, int rows, int first_item_idx) {
-    int lines_to_print = content.size;
+int GetCurrentRow() {
+    int x = 0;
+    int y = 0;
+    getyx(stdscr, y, x);
 
-    if (lines_to_print > rows) {
-        lines_to_print = rows;
-    }
+    (void)x;
 
-    for (int i = 0; i < lines_to_print; ++i) {
-        DirItem *item = &content.items[first_item_idx + i];
+    return y;
+}
+
+int GetCurrentColumn() {
+    int x = 0;
+    int y = 0;
+    getyx(stdscr, y, x);
+
+    (void)y;
+
+    return x;
+}
+
+bool DisplayDirectoryContents(const FileManagerState* st) {
+    int arrow_pos = st->selected_idx - st->first_item_idx;
+    int items_left = st->items.size - st->first_item_idx;
+    int cur_pos = 0;
+    int row = GetCurrentRow() + 1;
+    bool displayed_arrow = false;
+
+    while(cur_pos < items_left && row < st->win_height) {
+        move(row, 0);
+
+        if(cur_pos == arrow_pos) {
+            displayed_arrow = true;
+            printw("->");
+        } else {
+            printw("  ");
+        }
+
+        DirItem* item = &st->items.items[st->first_item_idx + cur_pos];
+
         int color_pair = -1;
 
         if (item->type == FILE_TYPE_DIR) {
@@ -42,35 +66,72 @@ void DisplayDirectoryContents(DirItemsList content, int rows, int first_item_idx
 
         if(color_pair != -1) {
             attron(COLOR_PAIR(color_pair));
-            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET, item->name);
+            printw(item->name);
             attroff(COLOR_PAIR(color_pair));
         } else {
-            mvprintw(SUBWINDOW_ROW_OFFSET + i, SUBWINDOW_COL_OFFSET, item->name);
+            printw(item->name);
         }
 
-        if(i) {
+        row = GetCurrentRow();
+
+        if(row >= st->win_height) {
+            break;
+        }
+
+        if(st->first_item_idx + cur_pos) {
             sprintf(g_buf, "%zu", item->size);
             int digits_num = strlen(g_buf);
-            mvprintw(SUBWINDOW_ROW_OFFSET + i, SIZE_INFO_COLUMN + 4 - digits_num, g_buf);
+
+            int size_info_offset = (int)(SIZE_INFO_RELATIVE_OFFSET * (float)st->win_width) + strlen("Size");
+
+            size_info_offset -= GetCurrentColumn() + digits_num;
+
+            if(size_info_offset <= 0) {
+                size_info_offset = 1;
+            }
+
+            PrintSpaces(size_info_offset);
+            printw(g_buf);
         }
+
+        row = GetCurrentRow();
+
+        ++cur_pos;
+        ++row;
     }
+
+    return displayed_arrow;
 }
 
-void DisplayArrow(int row) {
-    mvprintw(row, 0, "->");
-}
+void DisplayHeader(const FileManagerState* st) {
+    int start_row = GetCurrentRow();
 
-void DisplayHeader() {
+    move(start_row, 0);
     attron(A_REVERSE);
 
-    move(0, 0);
+    PrintSpaces(st->win_width);
 
-    for (int i = 0; i < COLS_NUM; ++i) {
-        printw(" ");
+    move(start_row, 0);
+    PrintSpaces(2);
+    printw("Name");
+    int size_info_offset = (int)(SIZE_INFO_RELATIVE_OFFSET * (float)st->win_width) - 2 - strlen("Size");
+    PrintSpaces(size_info_offset);
+    printw("Size");
+    attroff(A_REVERSE);
+}
+
+void DisplayState(const FileManagerState* st) {
+    move(0, 0);
+    DisplayHeader(st);
+    DisplayDirectoryContents(st);
+}
+
+bool CanArrowBeDisplayed(const FileManagerState* st) {
+    if(st->selected_idx == st->first_item_idx) {
+        return true;
     }
 
-    mvprintw(0, SUBWINDOW_COL_OFFSET, "Name");
-    mvprintw(0, SIZE_INFO_COLUMN, "Size");
-    mvprintw(0, MODIFIED_INFO_COLUMN, "Modified");
-    attroff(A_REVERSE);
+    move(0, 0);
+    DisplayHeader(st);
+    return DisplayDirectoryContents(st);
 }

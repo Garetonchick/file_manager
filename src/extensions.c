@@ -125,14 +125,13 @@ void OpenFile(const char* path, const char* current_path) {
     }
 
     PRINT_ERR("Opening file: %s\n", path);
+    endwin();
     open_file(path);
+    initscr();
     dlclose(handle);
+    (void)current_path;
 
-    flushinp();
-    // curs_set(0);
-    // clear();
-    // refresh();
-    
-    execl(g_argv0, g_argv0, current_path, NULL);
-    exit(0);
+    // endwin();
+    // execl(g_argv0, g_argv0, current_path, NULL);
+    // exit(1);
 }
