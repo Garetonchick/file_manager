@@ -1,5 +1,8 @@
 #include "structs.h"
+
 #include "constants.h"
+#include "exit.h"
+#include "logger.h"
 
 #include <curses.h>
 #include <string.h>
@@ -8,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
+#include <errno.h>
 
 void FetchWindowInfo(FileManagerState* st) {
     getmaxyx(stdscr, st->win_height, st->win_width);   
@@ -27,6 +31,8 @@ void InitFileManagerState(FileManagerState* st) {
     st->first_item_idx = 0;
 
     FetchWindowInfo(st);
+
+    Log("Initialized file manager state\n");
 }
 
 int DirItemCmp(const void *item1, const void *item2) {
@@ -41,18 +47,27 @@ void DestroyDirItemList(DirItemsList list) {
     free(list.items);
 }
 
-void UpdateDirItemsList(DirItemsList *items_list, const char* new_path, bool include_hidden) {
+bool UpdateDirItemsList(DirItemsList *items_list, const char* new_path, bool include_hidden) {
     DestroyDirItemList(*items_list);
+    errno = 0;
     *items_list = GetDirItemsList(new_path, include_hidden);
+
+    if(!items_list->items) {
+        return false;
+    }
+
     qsort(items_list->items, items_list->size, sizeof(DirItem), DirItemCmp);
+
+    return true;
 }
 
 DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
+    static const DirItemsList kBadList = {.items = NULL, .size = 0};
+
     DIR *dir = opendir(path);
 
     if (!dir) {
-        DirItemsList list = {.items = NULL, .size = 0};
-        return list;
+        return kBadList;
     }
 
     int path_len = strlen(path);
@@ -62,11 +77,9 @@ DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
     static char path_buf[PATH_MAX + 1] = {0};
     struct dirent *dir_member = NULL;
 
-    if (snprintf(path_buf, PATH_MAX, "%s", path) >= PATH_MAX) {
-        fprintf(stderr, "Exceeded max path length\n");
-        goto get_dir_items_error;
-    }
+    sprintf(path_buf, "%s", path);
 
+    errno = 0;
     while ((dir_member = readdir(dir))) {
         if (strcmp(dir_member->d_name, ".") == 0) {
             continue;
@@ -78,19 +91,23 @@ DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
 
         const char *format = path[path_len - 1] == '/' ? "%s" : "/%s";
 
-        if (snprintf(path_buf + path_len, PATH_MAX - path_len, format,
-                     dir_member->d_name) >= PATH_MAX - path_len) {
-            fprintf(stderr, "Exceeded max path length\n");
-            goto get_dir_items_error;
-        }
+        sprintf(path_buf + path_len, format, dir_member->d_name);
+        errno = 0;
 
         if (lstat(path_buf, &stat_buf) < 0) {
-            fprintf(stderr, "Lstat for path \"%s\" failed\n", path_buf);
-            goto get_dir_items_error;
+            Log("Couldn't get file stat: %s\n", path_buf);
+            Log("Reason: %s\n", strerror(errno));
+            errno = 0;
+            continue;
         }
 
         int name_len = strlen(dir_member->d_name);
         char *name = (char *)malloc(name_len + 1);
+
+        if(!name) {
+            FailExit();
+        }
+
         strcpy(name, dir_member->d_name);
 
         int new_item_idx = list.size;
@@ -100,6 +117,10 @@ DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
             capacity = capacity ? capacity * 2 : 2;
             list.items =
                 (DirItem *)realloc(list.items, capacity * sizeof(DirItem));
+
+            if(!list.items) {
+                FailExit();
+            }
         }
 
         list.items[new_item_idx].name = name;
@@ -120,13 +141,12 @@ DirItemsList GetDirItemsList(const char *path, bool include_hidden) {
         list.items[new_item_idx].type = ftype;
     }
 
-    goto get_dir_items_end;
+    if(errno) {
+        closedir(dir);
+        DestroyDirItemList(list);
+        return kBadList;
+    }
 
-get_dir_items_error:
-    closedir(dir);
-    exit(1);
-
-get_dir_items_end:
     closedir(dir);
 
     return list;

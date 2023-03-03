@@ -29,8 +29,9 @@ add_executable(file_manager
     src/structs.c 
     src/utils.c
     src/extensions.c
-    src/init.c
-    src/constants.c
+    src/strings_storage.c
+    src/exit.c
+    src/logger.c
 )
 target_link_libraries(file_manager ${CURSES_LIBRARIES})
 target_link_libraries(file_manager dl)

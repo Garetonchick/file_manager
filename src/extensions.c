@@ -2,17 +2,22 @@
 
 #include "constants.h"
 #include "debug.h"
-#include "init.h"
 #include "structs.h"
 #include "utils.h"
-#include "init.h"
+#include "global_buf.h"
+#include "logger.h"
 
 #include <string.h>
 #include <dlfcn.h>
 #include <ncurses.h>
 #include <unistd.h>
 
-struct LibList {
+typedef struct LibEntry {
+    char* extension;
+    char* libname;
+} LibEntry;
+
+static struct LibList {
     int libs_num;
     LibEntry libs[LIBS_LIST_SIZE];
     char* libs_dir;
@@ -76,6 +81,8 @@ void InitLibList(const char* libs_dir) {
     }
 
     DestroyDirItemList(ilist);
+
+    Log("Initialized library list\n");
 }
 
 void DestroyLibList() {
@@ -89,7 +96,7 @@ void DestroyLibList() {
     g_libs.libs_num = 0;
 }
 
-void OpenFile(const char* path, const char* current_path) {
+void OpenFile(const char* path) {
     PRINT_ERR("Trying to open file: %s\n", path);
     const char* ext = GetFileExtension(path);
     const char* libname = NULL;
@@ -125,13 +132,8 @@ void OpenFile(const char* path, const char* current_path) {
     }
 
     PRINT_ERR("Opening file: %s\n", path);
-    endwin();
     open_file(path);
+    endwin();
     initscr();
     dlclose(handle);
-    (void)current_path;
-
-    // endwin();
-    // execl(g_argv0, g_argv0, current_path, NULL);
-    // exit(1);
 }

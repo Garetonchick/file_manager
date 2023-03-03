@@ -3,9 +3,11 @@
 #include "display.h"
 #include "constants.h"
 #include "extensions.h"
+#include "global_buf.h"
 #include "structs.h"
 #include "utils.h"
-#include "init.h"
+#include "strings_storage.h"
+#include "logger.h"
 
 #include <assert.h>
 #include <curses.h>
@@ -21,6 +23,23 @@
 #include <unistd.h>
 #include <ctype.h>
 
+void InitNcurses() {
+    initscr();
+    curs_set(0);
+    keypad(stdscr, true);
+    nodelay(stdscr, true);
+
+    use_default_colors();
+    start_color();
+
+    init_pair(DIR_COLOR_PAIR, COLOR_CYAN, -1);
+    init_pair(SYMLINK_COLOR_PAIR, COLOR_MAGENTA, -1);
+    init_pair(FIFO_COLOR_PAIR, COLOR_WHITE, COLOR_BLUE);
+
+    refresh();
+
+    Log("Initialized Ncurses\n");
+}
 
 void UpdateState(FileManagerState* st, int key) {
     switch (key) {
@@ -61,30 +80,30 @@ void UpdateState(FileManagerState* st, int key) {
     }
 }
 
+char* AllocProgramDir(const char* argv0) {
+    getcwd(g_buf, GLOBAL_BUF_SIZE);
+    char* program_dir = AllocConcatPaths(g_buf, argv0);
+    int last_slash_idx = GetFileName(program_dir) - program_dir - 1;
+
+    program_dir[last_slash_idx] = '\0';
+
+    return program_dir;
+}
+
 int main(int args, char* argv[]) {
     if(!args) {
-        return 1;
+        return ZERO_ARGS_FAIL_RETURN_CODE;
     }
 
+    char* program_dir = AllocProgramDir(argv[0]); 
+
+    InitLogger(program_dir);
     InitNcurses();
 
     FileManagerState st;
     InitFileManagerState(&st);
 
-    char path_to_program_buf[PATH_MAX + 1];
-    ConcatPaths(st.current_path, argv[0], path_to_program_buf);
-    strcpy(g_path_to_program, path_to_program_buf);
-    strcpy(g_argv0, argv[0]);
-    int last_slash_idx = GetFileName(path_to_program_buf) - path_to_program_buf - 1;
-    path_to_program_buf[last_slash_idx] = '\0';
-
-    InitLibList(path_to_program_buf);
-
-    if(args >= 2) {
-        strcpy(st.current_path, argv[1]);
-        st.current_path_len = strlen(st.current_path);
-        ReloadCurrentDir(&st);
-    }
+    InitLibList(program_dir);
 
     int key = 0;
 
@@ -94,10 +113,13 @@ int main(int args, char* argv[]) {
         erase();
         DisplayState(&st);
         refresh();
+        ClearStorageStrings();        
     } while ((key = getch()) != 'q');
 
     endwin();
     DestroyLibList();
+    ClearStorage();
+    DestroyLogger();
 
     return 0;
 }

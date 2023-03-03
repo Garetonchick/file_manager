@@ -2,7 +2,6 @@
 #define SIZE_INFO_RELATIVE_OFFSET 0.7f
 
 // Buffer sizes
-#include <linux/limits.h>
 enum {
     GLOBAL_BUF_SIZE = 4444,
     READ_BUF_SIZE = 4096,
@@ -25,5 +24,9 @@ enum {
     FILE_TYPE_OTHER
 };
 
-extern char g_path_to_program[PATH_MAX + 1];
-extern char g_argv0[PATH_MAX + 1];
+// Errors
+enum {
+    ZERO_ARGS_FAIL_RETURN_CODE = 4444,
+    LOGGER_INIT_FAILED_RETURN_CODE = 4,
+    AVERAGE_FAIL_ENJOYER_RETURN_CODE = 6
+};
